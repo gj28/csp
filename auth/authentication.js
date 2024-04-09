@@ -16,8 +16,8 @@ function registerUser(req, res) {
     } = req.body;
 
     const userId = generateUserID();
-    const fetchUserName = `SELECT * FROM app.users WHERE personalemail = $1`;
-    const insertUserQuery = `INSERT INTO app.users(userid, fullname, contactno, usertype, personalemail, password, verificationtoken, verified) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`;
+    const fetchUserName = `SELECT * FROM CSP.users WHERE personalemail = ?`;
+    const insertUserQuery = `INSERT INTO CSP.users(userid, fullname, contactno, usertype, personalemail, password, verificationtoken, verified) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.query(fetchUserName, [personalEmail], (fetchUsernameError, fetchUsernameResult) => {
         if (fetchUsernameError) {
@@ -124,7 +124,7 @@ function sendTokenEmail(email, token) {
 
 function getUserById(req, res) {
     const userId = req.params.userId;
-    const getUserByUserIdQuery = `SELECT * FROM app.users WHERE userid = $1`;
+    const getUserByUserIdQuery = `SELECT * FROM CSP.users WHERE userid = $1`;
 
     db.query(getUserByUserIdQuery, [userId], (fetchUserIdError, fetchUserIdResult) => {
         if (fetchUserIdError) {
@@ -139,7 +139,7 @@ function getUserById(req, res) {
 }
 
 function getUsers(req, res) {
-    const getUserByUserQuery = `SELECT * FROM app.users`;
+    const getUserByUserQuery = `SELECT * FROM CSP.users`;
 
     db.query(getUserByUserQuery, (fetchUsersError, fetchUsersResult) => {
         if (fetchUsersError) {
@@ -163,7 +163,7 @@ function login(req, res) {
     } = req.body;
 
     // Check if the user exists in the database
-    const query = 'SELECT * FROM app.users WHERE personalemail = $1';
+    const query = 'SELECT * FROM CSP.users WHERE personalemail = $1';
     db.query(query, [Username], (error, result) => {
         try {
             if (error) {
@@ -293,7 +293,7 @@ function editUser(req, res) {
         personalEmail,
     } = req.body;
 
-    const editUserQuery = `UPDATE app.users SET fullName = $1, contactNo = $2, personalEmail = $3 WHERE userid = $4`;
+    const editUserQuery = `UPDATE CSP.users SET fullName = $1, contactNo = $2, personalEmail = $3 WHERE userid = $4`;
 
     db.query(editUserQuery, [
         fullName,
@@ -315,7 +315,7 @@ function editUser(req, res) {
 
 function deleteUser(req, res) {
     const userId = req.params.userId;
-    const deleteUserQuery = `DELETE FROM app.users WHERE userid = $1`;
+    const deleteUserQuery = `DELETE FROM CSP.users WHERE userid = $1`;
 
     db.query(deleteUserQuery, [userId], (deleteError, deleteResult) => {
         if (deleteError) {
@@ -355,7 +355,7 @@ function resetPassword(req, res) {
     } = req.body;
 
     // Check if the email and reset token match in the database
-    const query = 'SELECT * FROM app.reset_tokens WHERE token = $1';
+    const query = 'SELECT * FROM CSP.reset_tokens WHERE token = $1';
     db.query(query, [token], (error, result) => {
         if (error) {
             console.error('Error during reset password query:', error);
@@ -383,7 +383,7 @@ function resetPassword(req, res) {
             }
 
             // Update the password in the database
-            const updateQuery = 'UPDATE app.users SET password = $1 WHERE userid = $2';
+            const updateQuery = 'UPDATE CSP.users SET password = $1 WHERE userid = $2';
             db.query(updateQuery, [hashedPassword, userId], (error, updateResult) => {
                 if (error) {
                     console.error('Error updating password:', error);
@@ -393,7 +393,7 @@ function resetPassword(req, res) {
                 }
 
                 // Delete the reset token from the reset_tokens table
-                const deleteQuery = 'DELETE FROM app.reset_tokens WHERE token = $1';
+                const deleteQuery = 'DELETE FROM CSP.reset_tokens WHERE token = $1';
                 db.query(deleteQuery, [token], (error, deleteResult) => {
                     if (error) {
                         console.error('Error deleting reset token:', error);
@@ -416,7 +416,7 @@ function updatePassword(req, res) {
     } = req.body;
 
     // Check if the user exists in the database
-    const userCheckQuery = 'SELECT * FROM app.users WHERE userid = $1';
+    const userCheckQuery = 'SELECT * FROM CSP.users WHERE userid = $1';
     db.query(userCheckQuery, [UserId], (error, useridCheckResult) => {
         try {
             if (error) {
@@ -437,7 +437,7 @@ function updatePassword(req, res) {
             const hashedPassword = bcrypt.hashSync(Password, 10);
 
             // Update the user's password in the database
-            const updatePasswordQuery = 'UPDATE app.users SET password = $1 WHERE userid = $2';
+            const updatePasswordQuery = 'UPDATE CSP.users SET password = $1 WHERE userid = $2';
             db.query(updatePasswordQuery, [hashedPassword, UserId], (error, result) => {
                 if (error) {
                     console.error('Error updating password:', error);
@@ -465,7 +465,7 @@ function forgotPassword(req, res) {
         personalEmail
     } = req.body;
 
-    const query = 'SELECT * FROM app.users WHERE personalemail = $1';
+    const query = 'SELECT * FROM CSP.users WHERE personalemail = $1';
     db.query(query, [personalEmail], (error, result) => {
         if (error) {
             console.error(error);
@@ -489,7 +489,7 @@ function forgotPassword(req, res) {
         });
 
         const userId = result.rows[0].userid;
-        const insertQuery = 'INSERT INTO app.reset_tokens (userid, token) VALUES ($1, $2)';
+        const insertQuery = 'INSERT INTO CSP.reset_tokens (userid, token) VALUES ($1, $2)';
         db.query(insertQuery, [userId, resetToken], (insertError) => {
             if (insertError) {
                 console.error(insertError);
