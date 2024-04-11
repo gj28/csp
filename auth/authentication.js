@@ -45,7 +45,7 @@ function registerUser(req, res) {
             const verificationToken = jwtUtils.generateToken({
                 personalEmail: personalEmail
             });
-            db.query(insertUserQuery, [userId, fullName, contactNo, 'student', personalEmail, hashedPassword, verificationToken, '0'], (insertUserError, insertUserResult) => {
+            db.query(insertUserQuery, [userId, fullName, contactNo, personalEmail, hashedPassword, verificationToken, '0'], (insertUserError, insertUserResult) => {
                 if (insertUserError) {
                     console.error('Error during user insertion:', insertUserError);
                     return res.status(500).json({
@@ -261,7 +261,7 @@ function user(req, res) {
             });
         }
 
-        const getUserDetailsQuery = `SELECT * FROM ORP_users WHERE UserName = $1`;
+        const getUserDetailsQuery = `SELECT * FROM CSP.users WHERE UserName = $1`;
         pool.query(getUserDetailsQuery, [decodedToken.userName], (fetchUserError, fetchUsernameResult) => {
             if (fetchUserError) {
                 return res.status(401).json({
