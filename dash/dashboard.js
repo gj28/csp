@@ -137,6 +137,34 @@ console.log(req.body)
     }
   }
   
+  function getSchedule(req, res) {
+    try {
+      const userEmail = req.params.Email;
+      const query = `
+        SELECT *
+        FROM CSP.Schedule
+        WHERE Email = ?`;
+  
+      db.query(query, [userEmail], (error, results) => {
+        if (error) {
+          console.error('Error retrieving schedule data:', error);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+  
+        if (results.length === 0) {
+          return res.status(404).json({ message: 'No schedule found for the provided email' });
+        }
+  
+        console.log('Schedule data retrieved successfully:', results);
+        res.status(200).json({ schedule: results });
+      });
+    } catch (error) {
+      console.error('An error occurred:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+  
+  
   
   
   
@@ -144,5 +172,6 @@ console.log(req.body)
 
 module.exports = {
     insertScheduleData,
-    updateMonthlyValues
+    updateMonthlyValues,
+    getSchedule,
 };

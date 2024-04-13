@@ -13,5 +13,6 @@ router.post('/reset-password', authentication.resetPassword);
 //Dashboard
 router.post('/insertScheduleData/', dashboard.insertScheduleData);
 router.put('/updateMonthlyValues/:AdminEmail', dashboard.updateMonthlyValues);
+router.get('/getSchedule/:Email', dashboard.getSchedule);
 
 module.exports = router;
