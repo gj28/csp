@@ -63,7 +63,7 @@ function registerUser(req, res) {
                 }
 
                 try {
-                    sendTokenEmail(personalEmail, verificationToken);
+                    sendTokenEmail(personalEmail, verificationToken, fullName);
                     console.log('User registered successfully');
                     return res.status(200).json({
                         status: 200,
@@ -85,7 +85,7 @@ function registerUser(req, res) {
 
 
 
-function sendTokenEmail(email, token) {
+function sendTokenEmail(email, token, fullName) {
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
@@ -109,6 +109,7 @@ function sendTokenEmail(email, token) {
 
         // Render the template with the token
         const html = compiledTemplate({
+            fullName,
             token
         });
 
