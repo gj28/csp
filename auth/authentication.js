@@ -167,27 +167,30 @@ function getUsers(req, res) {
 
 
 function login(req, res) {
-    const {
-        Username,
-        Password
-    } = req.body;
+    const { Username, Password } = req.body;
 
     // Check if the user exists in the database
-    const query = 'SELECT * FROM CSP.users WHERE personalemail = $1';
-    db.query(query, [Username], (error, result) => {
+    const query = 'SELECT * FROM CSP.users WHERE personalemail = ?';
+    db.query(query, [Username], (error, rows) => {
         try {
-            if (error) {
-                throw new Error('Error during login');
-            }
-            const user = result.rows[0];
-            if (!user) {
-                console.error('User does not exist!');
+        if (error) {
+            console.error('Error during login:', error);
+            return res.status(500).json({
+                status: 500,
+                message: 'Internal server error',
+                data: {}
+            });
+        }
+        
+        if (rows.length === 0) {
+                console.error('User does not exist for Username:', Username);
                 return res.status(401).json({
                     status: 401,
                     message: 'User does not exist!',
                     data: {}
                 });
             }
+            const user = rows[0];
 
             if (user.verified === 0) {
                 console.error('User is not verified. Please verify your account.');
@@ -200,49 +203,44 @@ function login(req, res) {
 
             // Compare the provided password with the hashed password in the database
             bcrypt.compare(Password, user.password, (error, isPasswordValid) => {
-                try {
-                    if (error) {
-                        throw new Error('Error during password comparison');
-                    }
-
-                    if (!isPasswordValid) {
-                        console.error('Invalid credentials');
-                        return res.status(401).json({
-                            status: 401,
-                            message: 'Invalid credentials',
-                            data: {}
-                        });
-                    }
-
-                    // Generate a JWT token
-                    const token = jwtUtils.generateToken({
-                        Username: user.username
-                    });
-
-                    // Log the success if no error occurred
-                    res.json({
-                        status: 200,
-                        message: 'Login Successful!',
-                        data: {
-                            token: token,
-                            userid: user.userid,
-                            fullname: user.fullname,
-                            contactno: user.contactno,
-                            usertype: user.usertype,
-                            personalemail: user.personalemail,
-                        }
-                    });
-                } catch (error) {
-                    console.error(error);
-                    res.status(500).json({
+                if (error) {
+                    console.error('Error during password comparison:', error);
+                    return res.status(500).json({
                         status: 500,
                         message: 'Internal server error',
                         data: {}
                     });
                 }
+                if (!isPasswordValid) {
+                    console.error('Invalid credentials');
+                    return res.status(401).json({
+                        status: 401,
+                        message: 'Invalid credentials',
+                        data: {}
+                    });
+                }
+
+                // Generate a JWT token
+                const token = jwtUtils.generateToken({
+                    Username: user.username
+                });
+
+                // Log the success if no error occurred
+                res.json({
+                    status: 200,
+                    message: 'Login Successful!',
+                    data: {
+                        token: token,
+                        userid: user.userid,
+                        fullname: user.fullname,
+                        contactno: user.contactno,
+                        usertype: user.usertype,
+                        personalemail: user.personalemail,
+                    }
+                });
             });
         } catch (error) {
-            console.error(error);
+            console.error('Error during login:', error);
             res.status(500).json({
                 status: 500,
                 message: 'Internal server error',
@@ -251,6 +249,7 @@ function login(req, res) {
         }
     });
 }
+
 
 function user(req, res) {
     // Check if Authorization header exists
