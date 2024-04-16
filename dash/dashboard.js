@@ -29,10 +29,8 @@ function insertScheduleData(req, res) {
         Mob = null,
         Admin_Email = null,
         Comments = null,
-        Scheduled_DateTime = null, // Add this line
+        Scheduled_DateTime = null,
       } = req.body;
-  
-      // Optional validation of properties can be added here
   
       const insertQuery = `
         INSERT INTO CSP.Schedule (
@@ -79,7 +77,7 @@ function insertScheduleData(req, res) {
         Mob,
         Admin_Email,
         Comments,
-        Scheduled_DateTime // Add this value to the array
+        Scheduled_DateTime
       ];
   
       db.query(insertQuery, values, (error, results) => {
@@ -106,8 +104,7 @@ function updateMonthlyValues(req, res) {
       for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Comments']) {
         monthlyValues[month] = req.body[month] ;
       }
-      
-console.log(req.body)
+      console.log(req.body)
 
       const updateQuery = `
         UPDATE CSP.Schedule
@@ -164,6 +161,21 @@ console.log(req.body)
     }
   }
   
+  function AllSchedule(req, res) {
+    try {
+      const query = 'SELECT * FROM CSP.Schedule';
+      db.query(query, (error, rows) => {
+        if (error) {
+          throw new Error('Error fetching devices');
+        }
+        res.json({ devices: rows });
+        console.log(rows);
+      });
+    } catch (error) {
+      console.error('Error fetching Devices:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
   
   
   
@@ -174,4 +186,5 @@ module.exports = {
     insertScheduleData,
     updateMonthlyValues,
     getSchedule,
+    AllSchedule
 };
