@@ -11,6 +11,7 @@ function registerUser(req, res) {
     const {
         fullName,
         contactNo,
+        usertype,
         personalEmail,
         password
     } = req.body;
@@ -21,31 +22,37 @@ function registerUser(req, res) {
 
     db.query(fetchUserName, [personalEmail], (fetchUsernameError, fetchUsernameResult) => {
         if (fetchUsernameError) {
-            return res.status(401).json({
-                status: 401,
-                message: 'Error Checking User Email',
+            console.error('Error checking user email:', fetchUsernameError);
+            return res.status(500).json({
+                status: 500,
+                message: 'Internal server error',
                 data: {}
             });
         }
-        if (fetchUsernameResult.rows.length > 0) {
+        
+        if (fetchUsernameResult && fetchUsernameResult.length > 0) {
             return res.status(401).json({
                 status: 401,
                 message: 'User Already Exists',
                 data: {}
             });
         }
+
         bcrypt.hash(password, 10, (error, hashedPassword) => {
             if (error) {
-                return res.status(401).json({
-                    status: 401,
-                    message: 'Error During Hashing Password',
+                console.error('Error during hashing password:', error);
+                return res.status(500).json({
+                    status: 500,
+                    message: 'Internal server error',
                     data: {}
                 });
             }
+
             const verificationToken = jwtUtils.generateToken({
                 personalEmail: personalEmail
             });
-            db.query(insertUserQuery, [userId, fullName, contactNo, personalEmail, hashedPassword, verificationToken, '0'], (insertUserError, insertUserResult) => {
+
+            db.query(insertUserQuery, [userId, fullName, contactNo, usertype, personalEmail, hashedPassword, verificationToken, '0'], (insertUserError, insertUserResult) => {
                 if (insertUserError) {
                     console.error('Error during user insertion:', insertUserError);
                     return res.status(500).json({
@@ -54,6 +61,7 @@ function registerUser(req, res) {
                         data: {}
                     });
                 }
+
                 try {
                     sendTokenEmail(personalEmail, verificationToken);
                     console.log('User registered successfully');
@@ -65,7 +73,7 @@ function registerUser(req, res) {
                 } catch (sendTokenError) {
                     console.error('Error sending verification token:', sendTokenError);
                     return res.status(500).json({
-                        status: 200,
+                        status: 500,
                         message: 'Internal server error',
                         data: {}
                     });
@@ -74,6 +82,7 @@ function registerUser(req, res) {
         });
     });
 }
+
 
 
 function sendTokenEmail(email, token) {
