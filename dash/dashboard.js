@@ -178,7 +178,47 @@ function updateMonthlyValues(req, res) {
   }
   
   
-  
+  function countTasks(req, res) {
+    try {
+        const selectQuery = 'SELECT * FROM CSP.Schedule';
+
+        db.query(selectQuery, (error, rows) => {
+            if (error) {
+                console.error('Error fetching schedule data:', error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+
+            let totalTasks = rows.length;
+            let overdueTasks = 0;
+            let inProgressTasks = 0;
+            let completedTasks = 0;
+
+            for (const row of rows) {
+                for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'December']) {
+                    const status = row[month];
+                    if (status === 0) {
+                        overdueTasks++;
+                    } else if (status === 1) {
+                        completedTasks++;
+                    } else if (status === 2) {
+                        inProgressTasks++;
+                    }
+                }
+            }
+
+            res.status(200).json({
+                totalTasks: totalTasks,
+                overdueTasks: overdueTasks,
+                inProgressTasks: inProgressTasks,
+                completedTasks: completedTasks
+            });
+        });
+    } catch (error) {
+        console.error('An error occurred:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
   
   
 
@@ -186,5 +226,6 @@ module.exports = {
     insertScheduleData,
     updateMonthlyValues,
     getSchedule,
-    AllSchedule
+    AllSchedule,
+    countTasks
 };

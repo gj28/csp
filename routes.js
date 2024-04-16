@@ -15,6 +15,6 @@ router.post('/insertScheduleData/', dashboard.insertScheduleData);
 router.put('/updateMonthlyValues/:AdminEmail', dashboard.updateMonthlyValues);
 router.get('/getSchedule/:Email', dashboard.getSchedule);
 router.get('/AllSchedule', dashboard.AllSchedule);
-
+router.get('/countTasks', dashboard.countTasks);
 
 module.exports = router;
