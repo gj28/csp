@@ -6,7 +6,7 @@ const cors = require('cors'); // Import the cors package
 
 const app = express();
 
-const port = 3000;
+const port = 3050;
 
 app.use(express.json());
 app.use(bodyParser.json());
