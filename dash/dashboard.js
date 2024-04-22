@@ -163,7 +163,7 @@ function updateMonthlyValues(req, res) {
   
   function AllSchedule(req, res) {
     try {
-      const query = 'SELECT * FROM CSP.Schedule';
+      const query = 'SELECT * FROM Schedule';
       db.query(query, (error, rows) => {
         if (error) {
           throw new Error('Error fetching devices');
@@ -180,7 +180,7 @@ function updateMonthlyValues(req, res) {
   
   function countTasks(req, res) {
     try {
-        const selectQuery = 'SELECT * FROM CSP.Schedule';
+        const selectQuery = 'SELECT * FROM Schedule';
 
         db.query(selectQuery, (error, rows) => {
             if (error) {
@@ -219,7 +219,41 @@ function updateMonthlyValues(req, res) {
     }
 }
 
-  
+
+function approvalRequest(req, res) {
+  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email } = req.body;
+
+  try {
+    const approvalCheckQuery = 'SELECT * FROM approval WHERE task = ? AND Month = ?';
+
+    db.query(approvalCheckQuery, [Task, Month], (checkError, checkResult) => {
+      if (checkError) {
+        console.error('Error while checking device:', checkError);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (checkResult && checkResult.length > 0) {
+        console.error('Approval request already exists for this month and task');
+        return res.status(400).json({ message: 'Approval request already exists for this month and task' });
+      }
+
+      const approvalInsertQuery = 'INSERT INTO approval (task, Frequency, Month, Responsibility, Email, Mob, admin_email) VALUES (?,?,?,?,?,?,?)';
+
+      db.query(approvalInsertQuery, [Task, Frequency, Month, Responsibility, Email, Mob, admin_email], (insertError, insertResult) => {
+        if (insertError) {
+          console.error('Error while inserting device:', insertError);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        return res.json({ message: 'Approval Request Sent Successfully!' });
+      });
+    });
+  } catch (error) {
+    console.error('Error in device check:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
   
 
 module.exports = {
@@ -227,5 +261,6 @@ module.exports = {
     updateMonthlyValues,
     getSchedule,
     AllSchedule,
-    countTasks
+    countTasks,
+    approvalRequest
 };

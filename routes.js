@@ -16,5 +16,5 @@ router.put('/updateMonthlyValues/:AdminEmail', dashboard.updateMonthlyValues);
 router.get('/getSchedule/:Email', dashboard.getSchedule);
 router.get('/AllSchedule', dashboard.AllSchedule);
 router.get('/countTasks', dashboard.countTasks);
-
+router.post('/approvalRequest', dashboard.approvalRequest);
 module.exports = router;

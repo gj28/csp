@@ -1,4 +1,4 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 require('dotenv').config(); // Load environment variables from .env file
 
 const connection = mysql.createPool({
@@ -17,22 +17,6 @@ connection.getConnection((err, connection) => {
     return;
   }
   console.log('Connected to database with ID:', connection.threadId);
-
-  connection.query('SET time_zone = "Asia/Kolkata";', (err) => {
-    if (err) {
-      console.error('Error setting time zone:', err);
-      return;
-    }
-    //console.log('Time zone set to Asia/Kolkata');
-
-    connection.query('SELECT @@session.time_zone;', (err, results) => {
-      if (err) {
-        console.error('Error retrieving time zone:', err);
-        return;
-      }
-      console.log('Time zone of current database:', results[0]['@@session.time_zone']);
-    });
-  });
 });
 
 module.exports = connection;
