@@ -17,4 +17,8 @@ router.get('/getSchedule/:Email', dashboard.getSchedule);
 router.get('/AllSchedule', dashboard.AllSchedule);
 router.get('/countTasks', dashboard.countTasks);
 router.post('/approvalRequest', dashboard.approvalRequest);
+router.get('/AllMainTask', dashboard.AllMainTask);
+router.get('/AllSubTask', dashboard.AllSubTask);
+
+router.post('/approvalRequestForSubTask', dashboard.approvalRequestForSubTask)
 module.exports = router;

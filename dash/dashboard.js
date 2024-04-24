@@ -8,56 +8,32 @@ const path = require('path');
 const ejs = require('ejs');
 
 function insertScheduleData(req, res) {
-    try {
-      const {
-        Schedule_Equipment = null,
-        Frequency = null,
-        Jan = null,
-        Feb = null,
-        Mar = null,
-        Apr = null,
-        May = null,
-        Jun = null,
-        Jul = null,
-        Aug = null,
-        Sep = null,
-        Oct = null,
-        Nov = null,
-        December = null,
-        Responsibility = null,
-        Email = null,
-        Mob = null,
-        Admin_Email = null,
-        Comments = null,
-        Scheduled_DateTime = null,
-      } = req.body;
-  
-      const insertQuery = `
-        INSERT INTO CSP.Schedule (
-          Schedule_Equipment,
-          Frequency,
-          Jan,
-          Feb,
-          Mar,
-          Apr,
-          May,
-          Jun,
-          Jul,
-          Aug,
-          Sep,
-          Oct,
-          Nov,
-          December,
-          Responsibility,
-          Email,
-          Mob,
-          Admin_Email,
-          Comments,
-          Scheduled_DateTime
-        ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  
-      const values = [
+  try {
+    const {
+      Schedule_Equipment = null,
+      Frequency = null,
+      Jan = null,
+      Feb = null,
+      Mar = null,
+      Apr = null,
+      May = null,
+      Jun = null,
+      Jul = null,
+      Aug = null,
+      Sep = null,
+      Oct = null,
+      Nov = null,
+      December = null,
+      Responsibility = null,
+      Email = null,
+      Mob = null,
+      Admin_Email = null,
+      Comments = null,
+      Scheduled_DateTime = null,
+    } = req.body;
+
+    const insertQuery = `
+      INSERT INTO CSP.Schedule (
         Schedule_Equipment,
         Frequency,
         Jan,
@@ -78,107 +54,126 @@ function insertScheduleData(req, res) {
         Admin_Email,
         Comments,
         Scheduled_DateTime
-      ];
-  
-      db.query(insertQuery, values, (error, results) => {
-        if (error) {
-          console.error('Error inserting schedule data:', error);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
-  
-        console.log('Schedule data inserted successfully:', results);
-        res.status(201).json({ message: 'Schedule data inserted successfully' });
-      });
-    } catch (error) {
-      console.error('An error occurred:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-  
-function updateMonthlyValues(req, res) {
-    try {
-      const DateTime = req.query.DateTime;
-      const AdminEmail = req.params.AdminEmail;
-  
-      const monthlyValues = {};
-      for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Comments']) {
-        monthlyValues[month] = req.body[month] ;
-      }
-      console.log(req.body)
+      ) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-      const updateQuery = `
-        UPDATE CSP.Schedule
-        SET 
-          Jan = ?, Feb = ?, Mar = ?, Apr = ?, May = ?, Jun = ?, Jul = ?, Aug = ?, Sep = ?, Oct = ?, Nov = ?, December = ?, Comments = ?
-        WHERE Admin_Email = ? AND Scheduled_DateTime = ?`;
-  
-      // Prepare values array with extracted monthly values and existing params
-      const values = Object.values(monthlyValues).concat(AdminEmail, DateTime);
-  
-      db.query(updateQuery, values, (error, results) => {
-        if (error) {
-          console.error('Error updating schedule data:', error);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
-  
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ message: 'Schedule not found' });
-        }
-  
-        console.log('Schedule data updated successfully:', results);
-        res.status(200).json({ message: 'Schedule data updated successfully' });
-      });
-    } catch (error) {
-      console.error('An error occurred:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
+    const values = [
+      Schedule_Equipment,
+      Frequency,
+      Jan,
+      Feb,
+      Mar,
+      Apr,
+      May,
+      Jun,
+      Jul,
+      Aug,
+      Sep,
+      Oct,
+      Nov,
+      December,
+      Responsibility,
+      Email,
+      Mob,
+      Admin_Email,
+      Comments,
+      Scheduled_DateTime
+    ];
+
+    db.query(insertQuery, values, (error, results) => {
+      if (error) {
+        console.error('Error inserting schedule data:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+      res.status(201).json({ message: 'Schedule data inserted successfully' });
+    });
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
-  
-  function getSchedule(req, res) {
+}
+
+function updateMonthlyValues(req, res) {
+  try {
+    const DateTime = req.query.DateTime;
+    const AdminEmail = req.params.AdminEmail;
+
+    const monthlyValues = {};
+    for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Comments']) {
+      monthlyValues[month] = req.body[month] ;
+    }
+
+    const updateQuery = `
+      UPDATE CSP.Schedule
+      SET 
+        Jan = ?, Feb = ?, Mar = ?, Apr = ?, May = ?, Jun = ?, Jul = ?, Aug = ?, Sep = ?, Oct = ?, Nov = ?, December = ?, Comments = ?
+      WHERE Admin_Email = ? AND Scheduled_DateTime = ?`;
+
+    // Prepare values array with extracted monthly values and existing params
+    const values = Object.values(monthlyValues).concat(AdminEmail, DateTime);
+
+    db.query(updateQuery, values, (error, results) => {
+      if (error) {
+        console.error('Error updating schedule data:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: 'Schedule not found' });
+      }
+      res.status(200).json({ message: 'Schedule data updated successfully' });
+    });
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+function getSchedule(req, res) {
+  try {
+    const userEmail = req.params.Email;
+    const query = `
+      SELECT *
+      FROM CSP.Schedule
+      WHERE Email = ?`;
+
+    db.query(query, [userEmail], (error, results) => {
+      if (error) {
+        console.error('Error retrieving schedule data:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'No schedule found for the provided email' });
+      }
+
+      res.status(200).json({ schedule: results });
+    });
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+
+function AllSchedule(req, res) {
+  const query = 'SELECT * FROM Schedule';
+  db.query(query, (error, rows) => {
     try {
-      const userEmail = req.params.Email;
-      const query = `
-        SELECT *
-        FROM CSP.Schedule
-        WHERE Email = ?`;
-  
-      db.query(query, [userEmail], (error, results) => {
-        if (error) {
-          console.error('Error retrieving schedule data:', error);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
-  
-        if (results.length === 0) {
-          return res.status(404).json({ message: 'No schedule found for the provided email' });
-        }
-  
-        console.log('Schedule data retrieved successfully:', results);
-        res.status(200).json({ schedule: results });
-      });
+      if (error) {
+        console.error('Error fetching Tasks:', error);
+        throw new Error('Error fetching Tasks');
+      }
+      res.json({ Task: rows });
     } catch (error) {
-      console.error('An error occurred:', error);
+      console.error('Error fetching Tasks:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
-  }
-  
-  function AllSchedule(req, res) {
-    try {
-      const query = 'SELECT * FROM Schedule';
-      db.query(query, (error, rows) => {
-        if (error) {
-          throw new Error('Error fetching devices');
-        }
-        res.json({ devices: rows });
-        console.log(rows);
-      });
-    } catch (error) {
-      console.error('Error fetching Devices:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-  
-  
-  function countTasks(req, res) {
+  });
+}
+
+
+function countTasks(req, res) {
     try {
         const selectQuery = 'SELECT * FROM Schedule';
 
@@ -194,7 +189,7 @@ function updateMonthlyValues(req, res) {
             let completedTasks = 0;
 
             for (const row of rows) {
-                for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'December']) {
+                for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) {
                     const status = row[month];
                     if (status === 0) {
                         overdueTasks++;
@@ -219,9 +214,51 @@ function updateMonthlyValues(req, res) {
     }
 }
 
-
 function approvalRequest(req, res) {
-  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email } = req.body;
+  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload } = req.body;
+
+  let updateMonth = '';
+  switch (Month.toLowerCase()) {
+    case 'january':
+      updateMonth = 'Jan';
+      break;
+    case 'february':
+      updateMonth = 'Feb';
+      break;
+    case 'march':
+      updateMonth = 'Mar';
+      break;
+    case 'april':
+      updateMonth = 'Apr';
+      break;
+    case 'may':
+      updateMonth = 'May';
+      break;
+    case 'june':
+      updateMonth = 'Jun';
+      break;
+    case 'july':
+      updateMonth = 'Jul';
+      break;
+    case 'august':
+      updateMonth = 'Aug';
+      break;
+    case 'september':
+      updateMonth = 'Sep';
+      break;
+    case 'october':
+      updateMonth = 'Oct';
+      break;
+    case 'november':
+      updateMonth = 'Nov';
+      break;
+    case 'december':
+      updateMonth = 'Dec';
+      break;
+    default:
+      updateMonth = Month; // Default to the original month name
+      break;
+  }
 
   try {
     const approvalCheckQuery = 'SELECT * FROM approval WHERE task = ? AND Month = ?';
@@ -237,15 +274,23 @@ function approvalRequest(req, res) {
         return res.status(400).json({ message: 'Approval request already exists for this month and task' });
       }
 
-      const approvalInsertQuery = 'INSERT INTO approval (task, Frequency, Month, Responsibility, Email, Mob, admin_email) VALUES (?,?,?,?,?,?,?)';
+      const approvalInsertQuery = 'INSERT INTO approval (task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload) VALUES (?,?,?,?,?,?,?,?,?)';
 
-      db.query(approvalInsertQuery, [Task, Frequency, Month, Responsibility, Email, Mob, admin_email], (insertError, insertResult) => {
+      db.query(approvalInsertQuery, [Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload], (insertError, insertResult) => {
         if (insertError) {
           console.error('Error while inserting device:', insertError);
           return res.status(500).json({ message: 'Internal server error' });
         }
 
-        return res.json({ message: 'Approval Request Sent Successfully!' });
+        const scheduleUpdateQuery = `UPDATE Schedule SET ${updateMonth} = ? WHERE Schedule_Equipment = ?`;
+        db.query(scheduleUpdateQuery, [4, Task], (updateError, updateResult) => {
+          if (updateError) {
+            console.error('Error while updating schedule:', updateError);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+          sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email);
+          return res.json({ message: 'Approval Request Sent Successfully!' });
+        });
       });
     });
   } catch (error) {
@@ -254,7 +299,162 @@ function approvalRequest(req, res) {
   }
 }
 
-  
+function AllMainTask(req, res) {
+  const query = 'SELECT * FROM time_based_task';
+  db.query(query, (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching MainTasks:', error);
+        throw new Error('Error fetching MainTasks');
+      }
+      res.json({ MainTask: rows });
+    } catch (error) {
+      console.error('Error fetching MainTasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
+function AllSubTask(req, res) {
+  const query = 'SELECT * FROM time_based_subtask';
+  db.query(query, (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching subtasks:', error);
+        throw new Error('Error fetching subtasks');
+      }
+      res.json({ SubTask: rows });
+    } catch (error) {
+      console.error('Error fetching SubTasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
+function approvalRequestForSubTask(req, res) {
+  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload } = req.body;
+
+  let updateMonth = '';
+  switch (Month.toLowerCase()) {
+    case 'january':
+      updateMonth = 'Jan';
+      break;
+    case 'february':
+      updateMonth = 'Feb';
+      break;
+    case 'march':
+      updateMonth = 'Mar';
+      break;
+    case 'april':
+      updateMonth = 'Apr';
+      break;
+    case 'may':
+      updateMonth = 'May';
+      break;
+    case 'june':
+      updateMonth = 'Jun';
+      break;
+    case 'july':
+      updateMonth = 'Jul';
+      break;
+    case 'august':
+      updateMonth = 'Aug';
+      break;
+    case 'september':
+      updateMonth = 'Sep';
+      break;
+    case 'october':
+      updateMonth = 'Oct';
+      break;
+    case 'november':
+      updateMonth = 'Nov';
+      break;
+    case 'december':
+      updateMonth = 'Dec';
+      break;
+    default:
+      updateMonth = Month; // Default to the original month name
+      break;
+  }
+
+  try {
+    const approvalCheckQuery = 'SELECT * FROM approval WHERE task = ? AND Month = ?';
+
+    db.query(approvalCheckQuery, [Task, Month], (checkError, checkResult) => {
+      if (checkError) {
+        console.error('Error while checking device:', checkError);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (checkResult && checkResult.length > 0) {
+        console.error('Approval request already exists for this month and task');
+        return res.status(400).json({ message: 'Approval request already exists for this month and task' });
+      }
+
+      const approvalInsertQuery = 'INSERT INTO approval (task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload) VALUES (?,?,?,?,?,?,?,?,?)';
+
+      db.query(approvalInsertQuery, [Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload], (insertError, insertResult) => {
+        if (insertError) {
+          console.error('Error while inserting device:', insertError);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        const scheduleUpdateQuery = `UPDATE time_based_subtask SET ${updateMonth} = ? WHERE Schedule_Equipment = ?`;
+        db.query(scheduleUpdateQuery, [4, Task], (updateError, updateResult) => {
+          if (updateError) {
+            console.error('Error while updating schedule:', updateError);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+          sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email)
+          return res.json({ message: 'Approval Request Sent Successfully!' });
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Error in device check:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+function sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email) {
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: 'donotreplysenselive@gmail.com',
+      pass: 'xgcklimtlbswtzfq',
+    },
+  });
+
+  const templatePath = path.join(__dirname, '../mail-body/email-template.ejs');
+  fs.readFile(templatePath, 'utf8', (err, templateData) => {
+    if (err) {
+      console.error('Error reading email template:', err);
+      return;
+    }
+    const compiledTemplate = ejs.compile(templateData);
+
+    const html = compiledTemplate({ Task, Frequency, Month, Responsibility });
+
+    const mailOptions = {
+      from: 'donotreplySenselive@gmail.com',
+      to: admin_email,
+      subject: 'Task Approval Request',
+      html: html,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+  });
+}
 
 module.exports = {
     insertScheduleData,
@@ -262,5 +462,8 @@ module.exports = {
     getSchedule,
     AllSchedule,
     countTasks,
-    approvalRequest
+    approvalRequest,
+    AllMainTask,
+    AllSubTask,
+    approvalRequestForSubTask
 };
