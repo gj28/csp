@@ -12,23 +12,15 @@ const credentials = { key: privateKey, cert: fullchain };
 const app = express();
 
 const port = 3050;
-app.use(cors());
+
+// Set CORS configuration to allow requests from any origin
+app.use(cors({
+  origin: '*'
+}));
 
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
-
-// CORS configuration
-
-
-// Uncomment the following line if you still want to enable CORS for all routes without specific headers
-// app.use(cors());
-
-// app.use('/elkem', router);
-
-// app.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
 
 const httpsServer = https.createServer(credentials, app);
 
