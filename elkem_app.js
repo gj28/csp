@@ -12,11 +12,7 @@ const credentials = { key: privateKey, cert: fullchain };
 const app = express();
 
 const port = 3050;
-const corsOptions = {
-  allowedHeaders: ['Content-Type', 'Authorization'] // Include 'Authorization' in the allowed headers
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
