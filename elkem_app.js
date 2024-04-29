@@ -11,7 +11,7 @@ const credentials = { key: privateKey, cert: fullchain };
 
 const app = express();
 
-const port = 3050;
+const port = 4000;
 
 app.use(express.json());
 app.use(bodyParser.json());
@@ -28,6 +28,6 @@ app.listen(port, () => {
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(3050, () => {
+httpsServer.listen(4000, () => {
   console.log(`HTTPS server listening on port ${port}`);
 });
