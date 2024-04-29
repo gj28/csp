@@ -12,6 +12,11 @@ const credentials = { key: privateKey, cert: fullchain };
 const app = express();
 
 const port = 3050;
+const corsOptions = {
+  allowedHeaders: ['Content-Type', 'Authorization'] // Include 'Authorization' in the allowed headers
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
@@ -19,11 +24,7 @@ app.use(bodyParser.json());
 app.use('/elkem', router);
 
 // CORS configuration
-const corsOptions = {
-  allowedHeaders: ['Content-Type', 'Authorization'] // Include 'Authorization' in the allowed headers
-};
 
-app.use(cors(corsOptions));
 
 // Uncomment the following line if you still want to enable CORS for all routes without specific headers
 // app.use(cors());
