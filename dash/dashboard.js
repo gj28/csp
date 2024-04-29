@@ -456,6 +456,369 @@ function sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, adm
   });
 }
 
+function AllScheduleByUser(req, res) {
+  const Email = req.params.Email;
+  const query = 'SELECT * FROM Schedule WHERE Email = ?'; // Add condition to filter by email
+  db.query(query, [Email], (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching Tasks:', error);
+        throw new Error('Error fetching Tasks');
+      }
+      res.json({ Task: rows });
+    } catch (error) {
+      console.error('Error fetching Tasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
+function AllMainTaskByUser(req, res) {
+  const Email = req.params.Email;
+  const query = 'SELECT * FROM time_based_task WHERE Email = ?'; // Add condition to filter by email
+  db.query(query, [Email], (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching Tasks:', error);
+        throw new Error('Error fetching Tasks');
+      }
+      res.json({ Task: rows });
+    } catch (error) {
+      console.error('Error fetching Tasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+function AllSubTaskByUser(req, res) {
+  const Email = req.params.Email;
+  const query = 'SELECT * FROM time_based_subtask WHERE Email = ?'; // Add condition to filter by email
+  db.query(query, [Email], (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching Tasks:', error);
+        throw new Error('Error fetching Tasks');
+      }
+      res.json({ Task: rows });
+    } catch (error) {
+      console.error('Error fetching Tasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+function countTasksByUser(req, res) {
+  const Email = req.params.Email;
+
+  try {
+      const selectQuery = 'SELECT * FROM Schedule WHERE Email = ?';
+
+      db.query(selectQuery,[Email], (error, rows) => {
+          if (error) {
+              console.error('Error fetching schedule data:', error);
+              return res.status(500).json({ message: 'Internal server error' });
+          }
+
+          let totalTasks = rows.length;
+          let overdueTasks = 0;
+          let inProgressTasks = 0;
+          let completedTasks = 0;
+
+          for (const row of rows) {
+              for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) {
+                  const status = row[month];
+                  if (status === 0) {
+                      overdueTasks++;
+                  } else if (status === 1) {
+                      completedTasks++;
+                  } else if (status === 2) {
+                      inProgressTasks++;
+                  }
+              }
+          }
+
+          res.status(200).json({
+              totalTasks: totalTasks,
+              overdueTasks: overdueTasks,
+              inProgressTasks: inProgressTasks,
+              completedTasks: completedTasks
+          });
+      });
+  } catch (error) {
+      console.error('An error occurred:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+function AllApprovalRequestByOwner(req, res) {
+  const admin_email = req.params.admin_email;
+  const query = 'SELECT * FROM approval WHERE admin_email = ?'; // Add condition to filter by email
+  db.query(query, [admin_email], (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error fetching Tasks:', error);
+        throw new Error('Error fetching Tasks');
+      }
+      res.json({ Task: rows });
+    } catch (error) {
+      console.error('Error fetching Tasks:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
+function markAsApproved(req, res) {
+  const { task, month, remark } = req.body;
+
+  let updateMonth = '';
+  switch (month.toLowerCase()) {
+    case 'january':
+      updateMonth = 'Jan';
+      break;
+    case 'february':
+      updateMonth = 'Feb';
+      break;
+    case 'march':
+      updateMonth = 'Mar';
+      break;
+    case 'april':
+      updateMonth = 'Apr';
+      break;
+    case 'may':
+      updateMonth = 'May';
+      break;
+    case 'june':
+      updateMonth = 'Jun';
+      break;
+    case 'july':
+      updateMonth = 'Jul';
+      break;
+    case 'august':
+      updateMonth = 'Aug';
+      break;
+    case 'september':
+      updateMonth = 'Sep';
+      break;
+    case 'october':
+      updateMonth = 'Oct';
+      break;
+    case 'november':
+      updateMonth = 'Nov';
+      break;
+    case 'december':
+      updateMonth = 'Dec';
+      break;
+    default:
+      updateMonth = month; // Default to the original month name
+      break;
+  }
+
+  const query1 = 'SELECT * FROM Schedule WHERE Schedule_Equipment = ?';
+  const query2 = 'SELECT * FROM time_based_subtask WHERE Schedule_Equipment = ?';
+  const deleteQuery = 'DELETE FROM approval WHERE task = ?';
+
+  db.query(query1, [task], (error1, rows1) => {
+    try {
+      if (error1) {
+        console.error('Error fetching Tasks from Schedule table:', error1);
+        throw new Error('Error fetching Tasks from Schedule table');
+      }
+
+      if (rows1.length > 0) {
+        // Update the task
+        const updateQuery = `
+          UPDATE Schedule 
+          SET ${updateMonth} = ?, Comments = ?
+          WHERE Schedule_Equipment = ?
+        `;
+        db.query(updateQuery, [1, remark, task], (updateError, result) => {
+          if (updateError) {
+            console.error('Error updating task:', updateError);
+            throw new Error('Error updating task');
+          }
+          // Delete task from approval table
+          db.query(deleteQuery, [task, month], (deleteError, deleteResult) => {
+            if (deleteError) {
+              console.error('Error deleting task from approval table:', deleteError);
+              throw new Error('Error deleting task from approval table');
+            }
+            res.status(200).json({ message: 'Task updated successfully' });
+          });
+        });
+      } else {
+        // Task not found in Schedule table, check time_based_subtask table
+        db.query(query2, [task, month], (error2, rows2) => {
+          try {
+            if (error2) {
+              console.error('Error fetching Tasks from time_based_subtask table:', error2);
+              throw new Error('Error fetching Tasks from time_based_subtask table');
+            }
+
+            if (rows2.length > 0) {
+              // Update the task
+              const updateQuery = `
+                UPDATE time_based_subtask 
+                SET ${updateMonth} = ?, Comments = ?
+                WHERE Schedule_Equipment = ?
+              `;
+              db.query(updateQuery, [1, remark, task], (updateError, result) => {
+                if (updateError) {
+                  console.error('Error updating task:', updateError);
+                  throw new Error('Error updating task');
+                }
+                // Delete task from approval table
+                db.query(deleteQuery, [task], (deleteError, deleteResult) => {
+                  if (deleteError) {
+                    console.error('Error deleting task from approval table:', deleteError);
+                    throw new Error('Error deleting task from approval table');
+                  }
+                  res.status(200).json({ message: 'Task updated successfully' });
+                });
+              });
+            } else {
+              res.status(404).json({ message: 'Task not found' });
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ message: 'Internal server error' });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
+function markAsUnApproved(req, res) {
+  const { task, month, remark } = req.body;
+
+  let updateMonth = '';
+  switch (month.toLowerCase()) {
+    case 'january':
+      updateMonth = 'Jan';
+      break;
+    case 'february':
+      updateMonth = 'Feb';
+      break;
+    case 'march':
+      updateMonth = 'Mar';
+      break;
+    case 'april':
+      updateMonth = 'Apr';
+      break;
+    case 'may':
+      updateMonth = 'May';
+      break;
+    case 'june':
+      updateMonth = 'Jun';
+      break;
+    case 'july':
+      updateMonth = 'Jul';
+      break;
+    case 'august':
+      updateMonth = 'Aug';
+      break;
+    case 'september':
+      updateMonth = 'Sep';
+      break;
+    case 'october':
+      updateMonth = 'Oct';
+      break;
+    case 'november':
+      updateMonth = 'Nov';
+      break;
+    case 'december':
+      updateMonth = 'Dec';
+      break;
+    default:
+      updateMonth = month; // Default to the original month name
+      break;
+  }
+
+  const query1 = 'SELECT * FROM Schedule WHERE Schedule_Equipment = ?';
+  const query2 = 'SELECT * FROM time_based_subtask WHERE Schedule_Equipment = ?';
+  const deleteQuery = 'DELETE FROM approval WHERE task = ?';
+
+  db.query(query1, [task], (error1, rows1) => {
+    try {
+      if (error1) {
+        console.error('Error fetching Tasks from Schedule table:', error1);
+        throw new Error('Error fetching Tasks from Schedule table');
+      }
+
+      if (rows1.length > 0) {
+        // Update the task
+        const updateQuery = `
+          UPDATE Schedule 
+          SET ${updateMonth} = ?, Comments = ?
+          WHERE Schedule_Equipment = ?
+        `;
+        db.query(updateQuery, [2, remark, task], (updateError, result) => {
+          if (updateError) {
+            console.error('Error updating task:', updateError);
+            throw new Error('Error updating task');
+          }
+          // Delete task from approval table
+          db.query(deleteQuery, [task, month], (deleteError, deleteResult) => {
+            if (deleteError) {
+              console.error('Error deleting task from approval table:', deleteError);
+              throw new Error('Error deleting task from approval table');
+            }
+            res.status(200).json({ message: 'Task updated successfully' });
+          });
+        });
+      } else {
+        // Task not found in Schedule table, check time_based_subtask table
+        db.query(query2, [task, month], (error2, rows2) => {
+          try {
+            if (error2) {
+              console.error('Error fetching Tasks from time_based_subtask table:', error2);
+              throw new Error('Error fetching Tasks from time_based_subtask table');
+            }
+
+            if (rows2.length > 0) {
+              // Update the task
+              const updateQuery = `
+                UPDATE time_based_subtask 
+                SET ${updateMonth} = ?, Comments = ?
+                WHERE Schedule_Equipment = ?
+              `;
+              db.query(updateQuery, [2, remark, task], (updateError, result) => {
+                if (updateError) {
+                  console.error('Error updating task:', updateError);
+                  throw new Error('Error updating task');
+                }
+                // Delete task from approval table
+                db.query(deleteQuery, [task], (deleteError, deleteResult) => {
+                  if (deleteError) {
+                    console.error('Error deleting task from approval table:', deleteError);
+                    throw new Error('Error deleting task from approval table');
+                  }
+                  res.status(200).json({ message: 'Task Rejected successfully' });
+                });
+              });
+            } else {
+              res.status(404).json({ message: 'Task not found' });
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ message: 'Internal server error' });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+}
+
+
 module.exports = {
     insertScheduleData,
     updateMonthlyValues,
@@ -465,5 +828,12 @@ module.exports = {
     approvalRequest,
     AllMainTask,
     AllSubTask,
-    approvalRequestForSubTask
+    approvalRequestForSubTask,
+    AllScheduleByUser,
+    AllMainTaskByUser,
+    AllSubTaskByUser,
+    AllApprovalRequestByOwner,
+    markAsApproved,
+    markAsUnApproved,
+    countTasksByUser
 };

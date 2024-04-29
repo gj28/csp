@@ -17,8 +17,8 @@ function registerUser(req, res) {
     } = req.body;
 
     const userId = generateUserID();
-    const fetchUserName = `SELECT * FROM CSP.users WHERE personalemail = ?`;
-    const insertUserQuery = `INSERT INTO CSP.users(userid, fullname, contactno, usertype, personalemail, password, verificationtoken, verified) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`;
+    const fetchUserName = `SELECT * FROM csp.users WHERE personalemail = ?`;
+    const insertUserQuery = `INSERT INTO csp.users(userid, fullname, contactno, usertype, personalemail, password, verificationtoken, verified) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.query(fetchUserName, [personalEmail], (fetchUsernameError, fetchUsernameResult) => {
         if (fetchUsernameError) {
@@ -63,7 +63,7 @@ function registerUser(req, res) {
                 }
 
                 try {
-                    sendTokenEmail(personalEmail, verificationToken, fullName);
+                    //sendTokenEmail(personalEmail, verificationToken, fullName);
                     console.log('User registered successfully');
                     return res.status(200).json({
                         status: 200,
@@ -134,7 +134,7 @@ function sendTokenEmail(email, token, fullName) {
 
 function getUserById(req, res) {
     const userId = req.params.userId;
-    const getUserByUserIdQuery = `SELECT * FROM CSP.users WHERE userid = $1`;
+    const getUserByUserIdQuery = `SELECT * FROM csp.users WHERE userid = $1`;
 
     db.query(getUserByUserIdQuery, [userId], (fetchUserIdError, fetchUserIdResult) => {
         if (fetchUserIdError) {
@@ -149,7 +149,7 @@ function getUserById(req, res) {
 }
 
 function getUsers(req, res) {
-    const getUserByUserQuery = `SELECT * FROM CSP.users`;
+    const getUserByUserQuery = `SELECT * FROM csp.users`;
 
     db.query(getUserByUserQuery, (fetchUsersError, fetchUsersResult) => {
         if (fetchUsersError) {
@@ -165,132 +165,79 @@ function getUsers(req, res) {
     });
 }
 
-
 function login(req, res) {
-    const { Username, Password } = req.body;
+  const { email, password } = req.body;
 
-    // Check if the user exists in the database
-    const query = 'SELECT * FROM CSP.users WHERE personalemail = ?';
-    db.query(query, [Username], (error, rows) => {
+  const query = 'SELECT * FROM users WHERE personalemail = ?';
+  db.query(query, [email], (error, rows) => {
+    try {
+      if (error) {
+        console.error('Error during login:', error);
+        throw new Error('Error during login');
+      }
+
+      if (rows.length === 0) {
+        return res.status(401).json({ message: 'User does not exist!' });
+      }
+
+      const user = rows[0];
+
+      if (user.Verified === '0') {
+        return res.status(401).json({ message: 'User is not verified. Please verify your account.' });
+      }
+
+      if (user.block === 1) {
+        return res.status(401).json({ message: 'User is blocked. Please contact support.' });
+      }
+
+      bcrypt.compare(password, user.password, (error, isPasswordValid) => {
         try {
-        if (error) {
-            console.error('Error during login:', error);
-            return res.status(500).json({
-                status: 500,
-                message: 'Internal server error',
-                data: {}
-            });
-        }
-        
-        if (rows.length === 0) {
-                console.error('User does not exist for Username:', Username);
-                return res.status(401).json({
-                    status: 401,
-                    message: 'User does not exist!',
-                    data: {}
-                });
-            }
-            const user = rows[0];
+          if (error) {
+            console.error('Error during password comparison:', error);
+            throw new Error('Error during password comparison');
+          }
 
-            if (user.verified === 0) {
-                console.error('User is not verified. Please verify your account.');
-                return res.status(401).json({
-                    status: 401,
-                    message: 'User is not verified. Please verify your account.',
-                    data: {}
-                });
-            }
+          if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+          }
 
-            // Compare the provided password with the hashed password in the database
-            bcrypt.compare(Password, user.password, (error, isPasswordValid) => {
-                if (error) {
-                    console.error('Error during password comparison:', error);
-                    return res.status(500).json({
-                        status: 500,
-                        message: 'Internal server error',
-                        data: {}
-                    });
-                }
-                if (!isPasswordValid) {
-                    console.error('Invalid credentials');
-                    return res.status(401).json({
-                        status: 401,
-                        message: 'Invalid credentials',
-                        data: {}
-                    });
-                }
-
-                // Generate a JWT token
-                const token = jwtUtils.generateToken({
-                    Username: user.username
-                });
-
-                // Log the success if no error occurred
-                res.json({
-                    status: 200,
-                    message: 'Login Successful!',
-                    data: {
-                        token: token,
-                        userid: user.userid,
-                        fullname: user.fullname,
-                        contactno: user.contactno,
-                        usertype: user.usertype,
-                        personalemail: user.personalemail,
-                    }
-                });
-            });
+          // Generate a JWT token
+          const token = jwtUtils.generateToken({ personalemail: user.personalemail });
+          res.json({ token });
         } catch (error) {
-            console.error('Error during login:', error);
-            res.status(500).json({
-                status: 500,
-                message: 'Internal server error',
-                data: {}
-            });
+          console.error(error);
+          res.status(500).json({ message: 'Internal server error' });
         }
-    });
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 }
 
+function getUserDetails(req, res) {
+  const token = req.headers.authorization.split(' ')[1];
 
-function user(req, res) {
-    // Check if Authorization header exists
-    if (!req.headers.authorization) {
-        return res.status(401).json({
-            message: 'Authorization header missing'
-        });
+  const decodedToken = jwtUtils.verifyToken(token);
+  if (!decodedToken) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+
+  const query = 'SELECT * FROM users WHERE personalemail = ?';
+  db.query(query, [decodedToken.personalemail], (error, rows) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
 
-    const token = req.headers.authorization.split(' ')[1];
-
-    try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
-        if (!decodedToken) {
-            return res.status(401).json({
-                message: 'Invalid token'
-            });
-        }
-
-        const getUserDetailsQuery = `SELECT * FROM CSP.users WHERE UserName = $1`;
-        pool.query(getUserDetailsQuery, [decodedToken.userName], (fetchUserError, fetchUsernameResult) => {
-            if (fetchUserError) {
-                return res.status(401).json({
-                    message: 'Error while fetching user details'
-                });
-            }
-            if (fetchUsernameResult.rows.length === 0) {
-                return res.status(404).json({
-                    message: 'No user Found'
-                });
-            }
-            res.json({
-                user: fetchUsernameResult.rows[0]
-            });
-        });
-    } catch (error) {
-        return res.status(401).json({
-            message: 'Invalid token'
-        });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    const user = rows[0];
+    res.json(user);
+  });
 }
 
 
@@ -302,7 +249,7 @@ function editUser(req, res) {
         personalEmail,
     } = req.body;
 
-    const editUserQuery = `UPDATE CSP.users SET fullName = $1, contactNo = $2, personalEmail = $3 WHERE userid = $4`;
+    const editUserQuery = `UPDATE csp.users SET fullName = $1, contactNo = $2, personalEmail = $3 WHERE userid = $4`;
 
     db.query(editUserQuery, [
         fullName,
@@ -324,7 +271,7 @@ function editUser(req, res) {
 
 function deleteUser(req, res) {
     const userId = req.params.userId;
-    const deleteUserQuery = `DELETE FROM CSP.users WHERE userid = $1`;
+    const deleteUserQuery = `DELETE FROM csp.users WHERE userid = $1`;
 
     db.query(deleteUserQuery, [userId], (deleteError, deleteResult) => {
         if (deleteError) {
@@ -364,7 +311,7 @@ function resetPassword(req, res) {
     } = req.body;
 
     // Check if the email and reset token match in the database
-    const query = 'SELECT * FROM CSP.reset_tokens WHERE token = $1';
+    const query = 'SELECT * FROM csp.reset_tokens WHERE token = $1';
     db.query(query, [token], (error, result) => {
         if (error) {
             console.error('Error during reset password query:', error);
@@ -392,7 +339,7 @@ function resetPassword(req, res) {
             }
 
             // Update the password in the database
-            const updateQuery = 'UPDATE CSP.users SET password = $1 WHERE userid = $2';
+            const updateQuery = 'UPDATE csp.users SET password = $1 WHERE userid = $2';
             db.query(updateQuery, [hashedPassword, userId], (error, updateResult) => {
                 if (error) {
                     console.error('Error updating password:', error);
@@ -402,7 +349,7 @@ function resetPassword(req, res) {
                 }
 
                 // Delete the reset token from the reset_tokens table
-                const deleteQuery = 'DELETE FROM CSP.reset_tokens WHERE token = $1';
+                const deleteQuery = 'DELETE FROM csp.reset_tokens WHERE token = $1';
                 db.query(deleteQuery, [token], (error, deleteResult) => {
                     if (error) {
                         console.error('Error deleting reset token:', error);
@@ -425,7 +372,7 @@ function updatePassword(req, res) {
     } = req.body;
 
     // Check if the user exists in the database
-    const userCheckQuery = 'SELECT * FROM CSP.users WHERE userid = $1';
+    const userCheckQuery = 'SELECT * FROM csp.users WHERE userid = $1';
     db.query(userCheckQuery, [UserId], (error, useridCheckResult) => {
         try {
             if (error) {
@@ -446,7 +393,7 @@ function updatePassword(req, res) {
             const hashedPassword = bcrypt.hashSync(Password, 10);
 
             // Update the user's password in the database
-            const updatePasswordQuery = 'UPDATE CSP.users SET password = $1 WHERE userid = $2';
+            const updatePasswordQuery = 'UPDATE csp.users SET password = $1 WHERE userid = $2';
             db.query(updatePasswordQuery, [hashedPassword, UserId], (error, result) => {
                 if (error) {
                     console.error('Error updating password:', error);
@@ -474,7 +421,7 @@ function forgotPassword(req, res) {
         personalEmail
     } = req.body;
 
-    const query = 'SELECT * FROM CSP.users WHERE personalemail = $1';
+    const query = 'SELECT * FROM csp.users WHERE personalemail = $1';
     db.query(query, [personalEmail], (error, result) => {
         if (error) {
             console.error(error);
@@ -498,7 +445,7 @@ function forgotPassword(req, res) {
         });
 
         const userId = result.rows[0].userid;
-        const insertQuery = 'INSERT INTO CSP.reset_tokens (userid, token) VALUES ($1, $2)';
+        const insertQuery = 'INSERT INTO csp.reset_tokens (userid, token) VALUES ($1, $2)';
         db.query(insertQuery, [userId, resetToken], (insertError) => {
             if (insertError) {
                 console.error(insertError);
@@ -569,7 +516,7 @@ module.exports = {
     getUserById,
     getUsers,
     login,
-    user,
+    getUserDetails,
     editUser,
     deleteUser,
     resetPassword,
