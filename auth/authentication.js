@@ -217,6 +217,11 @@ function login(req, res) {
 }
 
 function getUserDetails(req, res) {
+  // Check if Authorization header exists
+  if (!req.headers.authorization) {
+    return res.status(401).json({ message: 'Authorization header is missing' });
+  }
+
   const token = req.headers.authorization.split(' ')[1];
 
   const decodedToken = jwtUtils.verifyToken(token);
@@ -239,6 +244,7 @@ function getUserDetails(req, res) {
     res.json(user);
   });
 }
+
 
 
 function editUser(req, res) {
