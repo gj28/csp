@@ -18,7 +18,9 @@ app.use(bodyParser.json());
 app.use('/elkem', router);
 
 // Enable CORS for all routes
-app.use(cors());
+app.use(cors({
+  allowedHeaders: ['Authorization', 'Content-Type'],
+}));
 
 //app.use('/elkem', router);
 
