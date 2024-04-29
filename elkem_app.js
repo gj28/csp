@@ -13,10 +13,8 @@ const app = express();
 
 const port = 3050;
 
-// Set CORS configuration to allow requests from any origin
-app.use(cors({
-  origin: '*'
-}));
+// Configure CORS to allow requests from any origin
+app.use(cors());
 
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
@@ -24,6 +22,6 @@ app.use('/elkem', router);
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(3050, () => {
+httpsServer.listen(port, () => {
   console.log(`HTTPS server listening on port ${port}`);
 });
