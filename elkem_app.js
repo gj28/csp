@@ -15,19 +15,18 @@ const port = 3050;
 
 app.use(express.json());
 app.use(bodyParser.json());
-//app.use('/elkem', router);
 
-// Enable CORS for all routes
-app.use(cors());
+// Enable CORS for all origins
+const corsOptions = {
+  origin: '*'
+};
+
+app.use(cors(corsOptions));
 
 app.use('/elkem', router);
 
-// app.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
-
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(3050, () => {
+httpsServer.listen(port, () => {
   console.log(`HTTPS server listening on port ${port}`);
 });
