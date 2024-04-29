@@ -18,10 +18,17 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
 
-// Enable CORS for all routes
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  allowedHeaders: ['Content-Type', 'Authorization'] // Include 'Authorization' in the allowed headers
+};
 
-//app.use('/elkem', router);
+app.use(cors(corsOptions));
+
+// Uncomment the following line if you still want to enable CORS for all routes without specific headers
+// app.use(cors());
+
+// app.use('/elkem', router);
 
 // app.listen(port, () => {
 //   console.log(`Server running on port ${port}`);
