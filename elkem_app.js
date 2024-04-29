@@ -2,7 +2,7 @@ const express = require('express');
 const router = require('./routes');
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 const https = require('https');
 
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/privkey.pem', 'utf8');
@@ -16,21 +16,21 @@ const port = 3050;
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
+
 app.use('/elkem', router);
 
-// Enable CORS for all routes
-app.use(cors({
-  allowedHeaders: ['Authorization']
-}));
+const corsOptions = {
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
-// app.use('/elkem', router);
-
-// app.listen(port, () => {
-//   console.log(`Server running on port ${port}`);
-// });
+app.use(cors(corsOptions));
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(3050, () => {
+httpsServer.listen(port, () => {
   console.log(`HTTPS server listening on port ${port}`);
 });
