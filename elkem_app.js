@@ -11,7 +11,7 @@ const credentials = { key: privateKey, cert: fullchain };
 
 const app = express();
 
-const port = 4000;
+const port = 3050;
 
 app.use(express.json());
 app.use(bodyParser.json());
@@ -22,12 +22,12 @@ app.use(cors());
 
 app.use('/elkem', router);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
 
 const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(4000, () => {
+httpsServer.listen(3050, () => {
   console.log(`HTTPS server listening on port ${port}`);
 });
