@@ -16,15 +16,6 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
 
-// Custom middleware to set CORS headers
-app.use((req, res, next) => {
-  // Set CORS headers to allow requests from any origin
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
-
 const httpsServer = https.createServer(credentials, app);
 
 httpsServer.listen(port, () => {
