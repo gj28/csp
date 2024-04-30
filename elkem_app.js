@@ -14,11 +14,12 @@ const app = express();
 const port = 3050;
 
 // Use cors middleware
-app.use(cors());
+
 
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
+app.use(cors());
 
 const httpsServer = https.createServer(credentials, app);
 
