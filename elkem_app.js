@@ -19,7 +19,10 @@ const port = 3050;
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
-app.use(cors());
+app.use(cors({
+  origin: 'https://elkem.senselive.in',
+  allowedHeaders: ['Authorization', 'Content-Type'], // Add 'Authorization' header
+}));
 
 const httpsServer = https.createServer(credentials, app);
 
