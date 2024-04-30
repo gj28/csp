@@ -15,7 +15,7 @@ const port = 3050;
 
 // Use cors middleware
 
-
+app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
