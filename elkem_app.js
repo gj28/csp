@@ -19,10 +19,17 @@ const port = 3050;
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
-app.use(cors({
-  origin: 'https://elkem.senselive.in',
-  allowedHeaders: ['Authorization', 'Content-Type'], // Add 'Authorization' header
-}));
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://elkem.senselive.in');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  // Pass control to the next middleware
+  next();
+});
 
 const httpsServer = https.createServer(credentials, app);
 
