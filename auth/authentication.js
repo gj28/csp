@@ -219,17 +219,23 @@ function login(req, res) {
 function getUserDetails(req, res) {
   // Check if Authorization header exists
   if (!req.headers.authorization) {
+    console.log('Authorization header is missing');
     return res.status(401).json({ message: 'Authorization header is missing' });
   }
 
   const token = req.headers.authorization.split(' ')[1];
+  console.log('Token:', token);
 
   const decodedToken = jwtUtils.verifyToken(token);
+  console.log('Decoded Token:', decodedToken);
   if (!decodedToken) {
+    console.log('Invalid token');
     return res.status(401).json({ message: 'Invalid token' });
   }
 
   const query = 'SELECT * FROM users WHERE personalemail = ?';
+  console.log('Query:', query);
+  console.log('Decoded Token Email:', decodedToken.personalemail);
   db.query(query, [decodedToken.personalemail], (error, rows) => {
     if (error) {
       console.error(error);
@@ -237,13 +243,16 @@ function getUserDetails(req, res) {
     }
 
     if (rows.length === 0) {
+      console.log('User not found');
       return res.status(404).json({ message: 'User not found' });
     }
 
     const user = rows[0];
+    console.log('User:', user);
     res.json(user);
   });
 }
+
 
 
 
