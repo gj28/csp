@@ -217,20 +217,18 @@ function login(req, res) {
 }
 
 function getUserDetails(req, res) {
-  // Check if Authorization header exists
-  if (!req.headers.authorization) {
-    console.log('Authorization header is missing');
-    return res.status(401).json({ message: 'Authorization header is missing' });
+  const { sessionToken } = req.body;
+
+  if (!sessionToken) {
+    console.log('Session token is missing');
+    return res.status(401).json({ message: 'Session token is missing' });
   }
 
-  const token = req.headers.authorization.split(' ')[1];
-  console.log('Token:', token);
-
-  const decodedToken = jwtUtils.verifyToken(token);
+  const decodedToken = jwtUtils.verifyToken(sessionToken);
   console.log('Decoded Token:', decodedToken);
   if (!decodedToken) {
-    console.log('Invalid token');
-    return res.status(401).json({ message: 'Invalid token' });
+    console.log('Invalid session token');
+    return res.status(401).json({ message: 'Invalid session token' });
   }
 
   const query = 'SELECT * FROM users WHERE personalemail = ?';
@@ -252,6 +250,7 @@ function getUserDetails(req, res) {
     res.json(user);
   });
 }
+
 
 
 
