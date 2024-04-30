@@ -9,7 +9,7 @@ router.post('/register', authentication.registerUser);
 router.post('/login',authentication.login);
 router.post('/forgot', authentication.forgotPassword);
 router.post('/reset-password', authentication.resetPassword);
-router.get('/user', authentication.getUserDetails);
+router.post('/user', authentication.getUserDetails);
 
 //Dashboard
 router.post('/insertScheduleData/', dashboard.insertScheduleData);
