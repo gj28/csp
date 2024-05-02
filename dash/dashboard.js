@@ -791,10 +791,10 @@ function markAsApproved(req, res) {
                   throw new Error('Error updating task');
                 }
                 // Delete task from approval table
-                db.query(deleteQuery, [task], (deleteError, deleteResult) => {
-                  if (deleteError) {
-                    console.error('Error deleting task from approval table:', deleteError);
-                    throw new Error('Error deleting task from approval table');
+                db.query(updateQueryApproval, [task, month], (approvalError, approvalResult) => {
+                  if (approvalError) {
+                    console.error('Error updating approval status:', approvalError);
+                    return res.status(500).json({ message: 'Internal server error' });
                   }
                   res.status(200).json({ message: 'Task updated successfully' });
                 });
