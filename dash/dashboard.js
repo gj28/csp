@@ -288,7 +288,7 @@ function approvalRequest(req, res) {
             console.error('Error while updating schedule:', updateError);
             return res.status(500).json({ message: 'Internal server error' });
           }
-          //sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email);
+          sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email);
           return res.json({ message: 'Approval Request Sent Successfully!' });
         });
       });
