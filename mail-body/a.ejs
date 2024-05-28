@@ -1,0 +1,75 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Alert</title>
+    <style>
+        /* Your CSS styles for the email alert */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .email-alert {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .email-alert-content {
+            padding: 20px;
+            display: flex; /* Added */
+            flex-direction: column; /* Added */
+            align-items: center; /* Added */
+            text-align: center; /* Added */
+        }
+
+        .email-alert h2 {
+            color: #ff5722;
+            margin-bottom: 10px;
+        }
+
+        .email-alert h3 {
+            color: #efd213;
+            margin-bottom: 10px;
+        }
+
+        .email-alert p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .bell-icon {
+            font-size: 50px; /* Adjusted */
+            margin-bottom: 20px; /* Added */
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #ff5722;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="email-alert">
+        <div class="email-alert-content"><h2>Reminder!</h2>
+            <span class="bell-icon">&#x1F514;</span> <!-- Modified --><p>
+                We're reaching out to remind you that the following task named <span class="highlight"><%= scheduleEquipment %></span> has been scheduled on <span class="highlight"><%= queryMonthName %></span>.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

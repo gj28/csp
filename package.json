@@ -21,6 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.9.6",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.9.13",
     "path": "^0.12.7"
   }
