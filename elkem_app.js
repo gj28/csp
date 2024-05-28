@@ -1,6 +1,6 @@
 const express = require('express');
 const router = require('./routes');
-const mail = require('../autoMails');
+const mail = require('./autoMails/autoMails');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const https = require('https');
