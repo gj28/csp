@@ -21,8 +21,8 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use('/api', router);
-app.get('/api/test', (req, res) => {
+app.use('/elkem', router);
+app.get('/elkem/test', (req, res) => {
   console.log('Received GET request to /api/example');
   res.send('Response from Node.js server');
 });
