@@ -13,7 +13,7 @@ const credentials = { key: privateKey, cert: fullchain };
 
 const app = express();
 
-const port = 3050;
+const port = 3500;
 
 // Use cors middleware
 // app.use(cors());
