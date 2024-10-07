@@ -7,9 +7,9 @@ const https = require('https');
 const cors = require('cors'); // Import cors module
 const cron = require('node-cron');
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/privkey.pem', 'utf8');
-const fullchain = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/fullchain.pem', 'utf8');
-const credentials = { key: privateKey, cert: fullchain };
+// const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/privkey.pem', 'utf8');
+// const fullchain = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/fullchain.pem', 'utf8');
+// const credentials = { key: privateKey, cert: fullchain };
 
 const app = express();
 
@@ -21,21 +21,17 @@ app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(bodyParser.json());
 app.use('/elkem', router);
-app.get('/elkem/test', (req, res) => {
-  console.log('Received GET request to /elkem/test');
-  res.send('Response from Node.js server');
-});
 app.use(cors());
 
 cron.schedule('0 10 28-31 * *', mail.CheckSchedule);
 cron.schedule('0 10 1-5 * *', mail.CheckSchedule);
 
-const httpsServer = https.createServer(credentials, app);
+// const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(port, () => {
-  console.log(`HTTPS server listening on port ${port}`);
-});
-
-// app.listen(port, () => {
-//   console.log(`Server listening on port ${port}`);
+// httpsServer.listen(port, () => {
+//   console.log(`HTTPS server listening on port ${port}`);
 // });
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
