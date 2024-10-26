@@ -81,8 +81,8 @@ app.use(bodyParser.json());
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (!allowedOrigins.includes(origin)) {
-    // Return a 403 Forbidden status if the origin is not allowed
-    return res.status(403).json({ error: 'Access denied' });
+    // Serve the access denied HTML page if the origin is not allowed
+    return res.status(403).sendFile(path.join(__dirname, 'public', 'access_denied.html'));
   }
   next();
 });
