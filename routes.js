@@ -32,5 +32,6 @@ router.get('/AllScheduleByUser/:Email', dashboard.AllScheduleByUser);
 router.get('/AllMainTaskByUser/:Email', dashboard.AllMainTaskByUser);
 router.get('/AllSubTaskByUser/:Email', dashboard.AllSubTaskByUser);
 router.get('/countTasksByUser/:Email', dashboard.countTasksByUser);
+router.get('/fetchTaskByName/:task/:month', dashboard.fetchTaskByName);
 
 module.exports = router;

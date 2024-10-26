@@ -1,11 +1,9 @@
 const db = require('../db');
-const bcrypt = require('bcrypt');
-const jwtUtils = require('../token/jwtUtils');
-const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const crypto = require('../crypto/cryptoUtils');
 
 function insertScheduleData(req, res) {
   try {
@@ -164,7 +162,8 @@ function AllSchedule(req, res) {
         console.error('Error fetching Tasks:', error);
         throw new Error('Error fetching Tasks');
       }
-      res.json({ Task: rows });
+      const encrypted = crypto.encryptData({ Task: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching Tasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -172,47 +171,72 @@ function AllSchedule(req, res) {
   });
 }
 
+async function countTasks(req, res) {
+  try {
+      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM Schedule';
+      const subtaskQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM time_based_subtask';
 
-function countTasks(req, res) {
-    try {
-        const selectQuery = 'SELECT * FROM Schedule';
+      const [scheduleRows, subtaskRows] = await Promise.all([
+          new Promise((resolve, reject) => {
+              db.query(scheduleQuery, (error, results) => {
+                  if (error) {
+                      reject(error);
+                  } else {
+                      resolve(results);
+                  }
+              });
+          }),
+          new Promise((resolve, reject) => {
+              db.query(subtaskQuery, (error, results) => {
+                  if (error) {
+                      reject(error);
+                  } else {
+                      resolve(results);
+                  }
+              });
+          })
+      ]);
 
-        db.query(selectQuery, (error, rows) => {
-            if (error) {
-                console.error('Error fetching schedule data:', error);
-                return res.status(500).json({ message: 'Internal server error' });
-            }
+      let totalTasks = 0;
+      let overdueTasks = 0;
+      let inProgressTasks = 0;
+      let completedTasks = 0;
 
-            let totalTasks = rows.length;
-            let overdueTasks = 0;
-            let inProgressTasks = 0;
-            let completedTasks = 0;
+      function countTaskStatus(rows) {
+          for (const row of rows) {
+              for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'December']) {
+                  const status = row[month];
 
-            for (const row of rows) {
-                for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) {
-                    const status = row[month];
-                    if (status === 0) {
-                        overdueTasks++;
-                    } else if (status === 1) {
-                        completedTasks++;
-                    } else if (status === 2) {
-                        inProgressTasks++;
-                    }
-                }
-            }
+                  if (status === 3) {
+                      overdueTasks++;
+                  } else if (status === 1) {
+                      completedTasks++;
+                  } else if (status === 2 || status === 4) {
+                      inProgressTasks++;
+                  }
+              }
+          }
+      }
 
-            res.status(200).json({
-                totalTasks: totalTasks,
-                overdueTasks: overdueTasks,
-                inProgressTasks: inProgressTasks,
-                completedTasks: completedTasks
-            });
-        });
-    } catch (error) {
-        console.error('An error occurred:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
+      countTaskStatus(scheduleRows);
+      countTaskStatus(subtaskRows);
+
+      totalTasks = overdueTasks + inProgressTasks + completedTasks;
+
+      return res.status(200).json({
+          totalTasks,
+          overdueTasks,
+          inProgressTasks,
+          completedTasks
+      });
+
+  } catch (error) {
+      console.error('An error occurred:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+  }
 }
+
+
 
 function approvalRequest(req, res) {
   const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload } = req.body;
@@ -307,7 +331,8 @@ function AllMainTask(req, res) {
         console.error('Error fetching MainTasks:', error);
         throw new Error('Error fetching MainTasks');
       }
-      res.json({ MainTask: rows });
+      const encrypted = crypto.encryptData({ MainTask: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching MainTasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -324,7 +349,8 @@ function AllSubTask(req, res) {
         console.error('Error fetching subtasks:', error);
         throw new Error('Error fetching subtasks');
       }
-      res.json({ SubTask: rows });
+      const encrypted = crypto.encryptData({ SubTask: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching SubTasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -465,7 +491,9 @@ function AllScheduleByUser(req, res) {
         console.error('Error fetching Tasks:', error);
         throw new Error('Error fetching Tasks');
       }
-      res.json({ Task: rows });
+
+      const encrypted = crypto.encryptData({ Task: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching Tasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -483,7 +511,8 @@ function AllMainTaskByUser(req, res) {
         console.error('Error fetching Tasks:', error);
         throw new Error('Error fetching Tasks');
       }
-      res.json({ Task: rows });
+      const encrypted = crypto.encryptData({ Task: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching Tasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -500,7 +529,8 @@ function AllSubTaskByUser(req, res) {
         console.error('Error fetching Tasks:', error);
         throw new Error('Error fetching Tasks');
       }
-      res.json({ Task: rows });
+      const encrypted = crypto.encryptData({ Task: rows })
+      res.json(encrypted);
     } catch (error) {
       console.error('Error fetching Tasks:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -508,48 +538,72 @@ function AllSubTaskByUser(req, res) {
   });
 }
 
-function countTasksByUser(req, res) {
-  const Email = req.params.Email;
-
+async function countTasksByUser(req, res) {
   try {
-      const selectQuery = 'SELECT * FROM Schedule WHERE Email = ?';
+      const Email = req.params.Email;
+      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM Schedule WHERE Email = ?';
+      const subtaskQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM time_based_subtask WHERE Email = ?';
 
-      db.query(selectQuery,[Email], (error, rows) => {
-          if (error) {
-              console.error('Error fetching schedule data:', error);
-              return res.status(500).json({ message: 'Internal server error' });
-          }
+      const [scheduleRows, subtaskRows] = await Promise.all([
+          new Promise((resolve, reject) => {
+              db.query(scheduleQuery, [Email], (error, results) => {
+                  if (error) {
+                      reject(error);
+                  } else {
+                      resolve(results);
+                  }
+              });
+          }),
+          new Promise((resolve, reject) => {
+              db.query(subtaskQuery, [Email], (error, results) => {
+                  if (error) {
+                      reject(error);
+                  } else {
+                      resolve(results);
+                  }
+              });
+          })
+      ]);
 
-          let totalTasks = rows.length;
-          let overdueTasks = 0;
-          let inProgressTasks = 0;
-          let completedTasks = 0;
+      let totalTasks = 0;
+      let overdueTasks = 0;
+      let inProgressTasks = 0;
+      let completedTasks = 0;
 
+      function countTaskStatus(rows) {
           for (const row of rows) {
-              for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) {
+              for (const month of ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'December']) {
                   const status = row[month];
-                  if (status === 0) {
+
+                  if (status === 3) {
                       overdueTasks++;
                   } else if (status === 1) {
                       completedTasks++;
-                  } else if (status === 2) {
+                  } else if (status === 2 || status === 4) {
                       inProgressTasks++;
                   }
               }
           }
+      }
 
-          res.status(200).json({
-              totalTasks: totalTasks,
-              overdueTasks: overdueTasks,
-              inProgressTasks: inProgressTasks,
-              completedTasks: completedTasks
-          });
+      countTaskStatus(scheduleRows);
+      countTaskStatus(subtaskRows);
+
+      totalTasks = overdueTasks + inProgressTasks + completedTasks;
+
+      return res.status(200).json({
+          totalTasks,
+          overdueTasks,
+          inProgressTasks,
+          completedTasks
       });
+
   } catch (error) {
       console.error('An error occurred:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      return res.status(500).json({ message: 'Internal server error' });
   }
 }
+
 
 function AllApprovalRequestByOwner(req, res) {
   const admin_email = req.params.admin_email;
@@ -940,6 +994,34 @@ function markAsUnApproved(req, res) {
   });
 }
 
+async function fetchTaskByName(req, res) {
+  try {
+      const taskName = req.params.task.toLowerCase();  
+      const month = req.params.month.toLowerCase();
+      const query = 'SELECT Responsibility, approval_time, remark, upload FROM approval WHERE LOWER(task) = ? and LOWER(Month) = ?';  // Use LOWER in the SQL query
+
+      const results = await new Promise((resolve, reject) => {
+          db.query(query, [taskName, month], (error, results) => {
+              if (error) {
+                  reject(error);
+              } else {
+                  resolve(results);
+              }
+          });
+      });
+
+      if (results.length === 0) {
+          return res.status(404).json({ message: 'No tasks found with the given name.' });
+      }
+
+      return res.status(200).json(results[0]);
+
+  } catch (error) {
+      console.error('An error occurred:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 
 module.exports = {
     insertScheduleData,
@@ -957,5 +1039,6 @@ module.exports = {
     AllApprovalRequestByOwner,
     markAsApproved,
     markAsUnApproved,
-    countTasksByUser
+    countTasksByUser,
+    fetchTaskByName
 };

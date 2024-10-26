@@ -6,6 +6,8 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const crypto = require('../crypto/cryptoUtils');
+
 
 function registerUser(req, res) {
     const {
@@ -29,7 +31,7 @@ function registerUser(req, res) {
                 data: {}
             });
         }
-        
+
         if (fetchUsernameResult && fetchUsernameResult.length > 0) {
             return res.status(401).json({
                 status: 401,
@@ -166,91 +168,84 @@ function getUsers(req, res) {
 }
 
 function login(req, res) {
-  const { email, password } = req.body;
+    const { email, password } = req.body;
 
-  const query = 'SELECT * FROM users WHERE personalemail = ?';
-  db.query(query, [email], (error, rows) => {
-    try {
-      if (error) {
-        console.error('Error during login:', error);
-        throw new Error('Error during login');
-      }
-
-      if (rows.length === 0) {
-        return res.status(401).json({ message: 'User does not exist!' });
-      }
-
-      const user = rows[0];
-
-      if (user.Verified === '0') {
-        return res.status(401).json({ message: 'User is not verified. Please verify your account.' });
-      }
-
-      if (user.block === 1) {
-        return res.status(401).json({ message: 'User is blocked. Please contact support.' });
-      }
-
-      bcrypt.compare(password, user.password, (error, isPasswordValid) => {
+    const query = 'SELECT * FROM users WHERE personalemail = ?';
+    db.query(query, [email], (error, rows) => {
         try {
-          if (error) {
-            console.error('Error during password comparison:', error);
-            throw new Error('Error during password comparison');
-          }
+            if (error) {
+                console.error('Error during login:', error);
+                throw new Error('Error during login');
+            }
 
-          if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-          }
+            if (rows.length === 0) {
+                return res.status(401).json({ message: 'User does not exist!' });
+            }
 
-          // Generate a JWT token
-          const token = jwtUtils.generateToken({ personalemail: user.personalemail });
-          res.json({ token });
+            const user = rows[0];
+
+            if (user.Verified === '0') {
+                return res.status(401).json({ message: 'User is not verified. Please verify your account.' });
+            }
+
+            if (user.block === 1) {
+                return res.status(401).json({ message: 'User is blocked. Please contact support.' });
+            }
+
+            bcrypt.compare(password, user.password, (error, isPasswordValid) => {
+                try {
+                    if (error) {
+                        console.error('Error during password comparison:', error);
+                        throw new Error('Error during password comparison');
+                    }
+
+                    if (!isPasswordValid) {
+                        return res.status(401).json({ message: 'Invalid credentials' });
+                    }
+
+                    // Generate a JWT token
+                    const token = jwtUtils.generateToken({ personalemail: user.personalemail });
+                    res.json({ token });
+                } catch (error) {
+                    console.error(error);
+                    res.status(500).json({ message: 'Internal server error' });
+                }
+            });
         } catch (error) {
-          console.error(error);
-          res.status(500).json({ message: 'Internal server error' });
+            console.error(error);
+            res.status(500).json({ message: 'Internal server error' });
         }
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
+    });
 }
 
 function getUserDetails(req, res) {
-  const { sessionToken } = req.body;
-
-  if (!sessionToken) {
-    console.log('Session token is missing');
-    return res.status(401).json({ message: 'Session token is missing' });
-  }
-
-  const decodedToken = jwtUtils.verifyToken(sessionToken);
-  console.log('Decoded Token:', decodedToken);
-  if (!decodedToken) {
-    console.log('Invalid session token');
-    return res.status(401).json({ message: 'Invalid session token' });
-  }
-
-  const query = 'SELECT * FROM users WHERE personalemail = ?';
-  console.log('Query:', query);
-  console.log('Decoded Token Email:', decodedToken.personalemail);
-  db.query(query, [decodedToken.personalemail], (error, rows) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Internal server error' });
+    const { sessionToken } = req.body;
+  
+    if (!sessionToken) {
+      return sendEncryptedResponse(res, 401, 'Session token is missing');
     }
-
-    if (rows.length === 0) {
-      console.log('User not found');
-      return res.status(404).json({ message: 'User not found' });
+  
+    const decodedToken = jwtUtils.verifyToken(sessionToken);
+    if (!decodedToken) {
+      return sendEncryptedResponse(res, 401, 'Invalid session token');
     }
-
-    const user = rows[0];
-    console.log('User:', user);
-    res.json(user);
-  });
-}
-
+  
+    const query = 'SELECT * FROM users WHERE personalemail = ?';
+    db.query(query, [decodedToken.personalemail], (error, rows) => {
+      if (error) {
+        console.error(error);
+        return sendEncryptedResponse(res, 500, 'Internal server error');
+      }
+  
+      if (rows.length === 0) {
+        return sendEncryptedResponse(res, 404, 'User not found');
+      }
+  
+      const user = rows[0];
+      const encryptedUser = crypto.encryptData(user); 
+      res.json(encryptedUser);
+    });
+  }
 
 
 
@@ -524,6 +519,14 @@ function sendResetTokenEmail(personalEmail, resetToken) {
         });
     });
 }
+
+
+function sendEncryptedResponse(res, statusCode, message) {
+    const responseObject = { message };
+    const encryptedMessage = crypto.encryptData(responseObject);
+    return res.status(statusCode).json(encryptedMessage);
+}
+
 
 module.exports = {
     registerUser,
