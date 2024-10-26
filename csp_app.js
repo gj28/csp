@@ -69,22 +69,36 @@ const corsOptions = {
   origin: allowedOrigins,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
+// Use CORS middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(bodyParser.json());
 
+// Middleware to check origin
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!allowedOrigins.includes(origin)) {
+    // Return a 403 Forbidden status if the origin is not allowed
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+});
+
+// Define your routes
 app.use('/elkem', router);
 app.get('/elkem/test', (req, res) => {
   console.log('Received GET request to /elkem/test');
   res.send('Response from Node.js server');
 });
 
+// Scheduled tasks
 cron.schedule('0 10 28-31 * *', mail.CheckSchedule);
 cron.schedule('0 10 1-5 * *', mail.CheckSchedule);
 
+// Create HTTPS server
 const httpsServer = https.createServer(credentials, app);
 
 httpsServer.listen(port, () => {
