@@ -16,6 +16,8 @@ const app = express();
 
 const port = 3500;
 
+const allowedOrigins = ['https://elkem.senselive.in', 'http://localhost:4200'];
+
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +29,14 @@ app.get('/elkem/test', (req, res) => {
   res.send('Response from Node.js server');
 });
 
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!allowedOrigins.includes(origin)) {
+    // Serve the access denied HTML page if the origin is not allowed
+    return res.status(403).sendFile(path.join(__dirname, 'public', 'access_denied.html'));
+  }
+  next();
+});
 
 cron.schedule('0 10 28-31 * *', mail.CheckSchedule);
 cron.schedule('0 10 1-5 * *', mail.CheckSchedule);
