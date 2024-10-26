@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 const https = require('https');
 const mail = require('./autoMails/autoMails');
 const cron = require('node-cron');
-const path = require('path');
 
 
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/privkey.pem', 'utf8');
@@ -19,23 +18,22 @@ const port = 3500;
 
 const allowedOrigins = ['https://elkem.senselive.in', 'http://localhost:4200'];
 
-
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
+
+app.use('/elkem', router);
+app.get('/elkem/test', (req, res) => {
+  console.log('Received GET request to /api/example');
+  res.send('Response from Node.js server');
+});
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (!allowedOrigins.includes(origin)) {
     return res.status(403).sendFile(path.join(__dirname, 'public', 'access_denied.html'));
   }
   next();
-});
-
-
-app.use('/elkem', router);
-app.get('/elkem/test', (req, res) => {
-  console.log('Received GET request to /api/example');
-  res.send('Response from Node.js server');
 });
 
 
