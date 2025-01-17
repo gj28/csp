@@ -14,14 +14,14 @@ const port = 3500;
 const allowedOrigins = ['https://elkem.senselive.in', 'http://localhost:4200']; // Update with your actual allowed origins
 
 // Middleware to check origin
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (!allowedOrigins.includes(origin)) {
-    // Serve the access denied HTML page if the origin is not allowed
-    return res.status(403).sendFile(path.join(__dirname, 'public', 'access_denied.html'));
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (!allowedOrigins.includes(origin)) {
+//     // Serve the access denied HTML page if the origin is not allowed
+//     return res.status(403).sendFile(path.join(__dirname, 'public', 'access_denied.html'));
+//   }
+//   next();
+// });
 
 app.use(cors());
 app.use(express.json());
