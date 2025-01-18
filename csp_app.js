@@ -56,8 +56,8 @@ const mail = require('./autoMails/autoMails');
 const cron = require('node-cron');
 const path = require('path');
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/privkey.pem', 'utf8');
-const fullchain = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.in/fullchain.pem', 'utf8');
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.io/privkey.pem', 'utf8');
+const fullchain = fs.readFileSync('/etc/letsencrypt/live/senso.senselive.io/fullchain.pem', 'utf8');
 const credentials = { key: privateKey, cert: fullchain };
 
 const app = express();
