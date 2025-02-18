@@ -31,7 +31,7 @@ function insertScheduleData(req, res) {
     } = req.body;
 
     const insertQuery = `
-      INSERT INTO CSP.Schedule (
+      INSERT INTO CSP.schedule (
         Schedule_Equipment,
         Frequency,
         Jan,
@@ -102,7 +102,7 @@ function updateMonthlyValues(req, res) {
     }
 
     const updateQuery = `
-      UPDATE CSP.Schedule
+      UPDATE CSP.schedule
       SET 
         Jan = ?, Feb = ?, Mar = ?, Apr = ?, May = ?, Jun = ?, Jul = ?, Aug = ?, Sep = ?, Oct = ?, Nov = ?, December = ?, Comments = ?
       WHERE Admin_Email = ? AND Scheduled_DateTime = ?`;
@@ -132,7 +132,7 @@ function getSchedule(req, res) {
     const userEmail = req.params.Email;
     const query = `
       SELECT *
-      FROM CSP.Schedule
+      FROM CSP.schedule
       WHERE Email = ?`;
 
     db.query(query, [userEmail], (error, results) => {
@@ -155,7 +155,7 @@ function getSchedule(req, res) {
 
 
 function AllSchedule(req, res) {
-  const query = 'SELECT * FROM Schedule';
+  const query = 'SELECT * FROM schedule';
   db.query(query, (error, rows) => {
     try {
       if (error) {
@@ -173,7 +173,7 @@ function AllSchedule(req, res) {
 
 async function countTasks(req, res) {
   try {
-      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM Schedule';
+      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM schedule';
       const subtaskQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM time_based_subtask';
 
       const [scheduleRows, subtaskRows] = await Promise.all([
@@ -306,7 +306,7 @@ function approvalRequest(req, res) {
           return res.status(500).json({ message: 'Internal server error' });
         }
 
-        const scheduleUpdateQuery = `UPDATE Schedule SET ${updateMonth} = ? WHERE Schedule_Equipment = ?`;
+        const scheduleUpdateQuery = `UPDATE schedule SET ${updateMonth} = ? WHERE Schedule_Equipment = ?`;
         db.query(scheduleUpdateQuery, [4, Task], (updateError, updateResult) => {
           if (updateError) {
             console.error('Error while updating schedule:', updateError);
@@ -484,7 +484,7 @@ function sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, adm
 
 function AllScheduleByUser(req, res) {
   const Email = req.params.Email;
-  const query = 'SELECT * FROM Schedule WHERE Email = ?'; // Add condition to filter by email
+  const query = 'SELECT * FROM schedule WHERE Email = ?'; // Add condition to filter by email
   db.query(query, [Email], (error, rows) => {
     try {
       if (error) {
@@ -541,7 +541,7 @@ function AllSubTaskByUser(req, res) {
 async function countTasksByUser(req, res) {
   try {
       const Email = req.params.Email;
-      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM Schedule WHERE Email = ?';
+      const scheduleQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM schedule WHERE Email = ?';
       const subtaskQuery = 'SELECT Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, December FROM time_based_subtask WHERE Email = ?';
 
       const [scheduleRows, subtaskRows] = await Promise.all([
@@ -792,7 +792,7 @@ function markAsApproved(req, res) {
       break;
   }
 
-  const query1 = 'SELECT * FROM Schedule WHERE Schedule_Equipment = ?';
+  const query1 = 'SELECT * FROM Schedule WHERE schedule_Equipment = ?';
   const query2 = 'SELECT * FROM time_based_subtask WHERE Schedule_Equipment = ?';
   const updateQueryApproval = 'UPDATE approval SET status = 0 WHERE task = ? AND Month = ? ';
 
@@ -806,7 +806,7 @@ function markAsApproved(req, res) {
       if (rows1.length > 0) {
         // Update the task
         const updateQuery = `
-          UPDATE Schedule 
+          UPDATE schedule 
           SET ${updateMonth} = ?, Comments = ?
           WHERE Schedule_Equipment = ?
         `;
@@ -916,7 +916,7 @@ function markAsUnApproved(req, res) {
       break;
   }
 
-  const query1 = 'SELECT * FROM Schedule WHERE Schedule_Equipment = ?';
+  const query1 = 'SELECT * FROM schedule WHERE Schedule_Equipment = ?';
   const query2 = 'SELECT * FROM time_based_subtask WHERE Schedule_Equipment = ?';
   const deleteQuery = 'DELETE FROM approval WHERE task = ?';
 
@@ -930,7 +930,7 @@ function markAsUnApproved(req, res) {
       if (rows1.length > 0) {
         // Update the task
         const updateQuery = `
-          UPDATE Schedule 
+          UPDATE schedule 
           SET ${updateMonth} = ?, Comments = ?
           WHERE Schedule_Equipment = ?
         `;
