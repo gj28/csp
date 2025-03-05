@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const mail = require('./autoMails/autoMails');
 const cron = require('node-cron');
 const path = require('path');
+require('./autoMails/autoMails');
 
 const app = express();
 const port = 3500;
@@ -24,8 +25,9 @@ const allowedOrigins = ['https://elkem.senselive.in', 'http://localhost:4200']; 
 // });
 
 app.use(cors());
-app.use(express.json());
-app.use(bodyParser.json());
+app.use(express.json({ limit: '50mb' })); 
+app.use(bodyParser.json({ limit: '50mb' })); 
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));;
 
 app.use('/elkem', router);
 app.get('/elkem/test', (req, res) => {
@@ -34,8 +36,8 @@ app.get('/elkem/test', (req, res) => {
 });
 
 // Cron jobs for scheduled tasks
-cron.schedule('0 10 28-31 * *', mail.CheckSchedule);
-cron.schedule('0 10 1-5 * *', mail.CheckSchedule);
+// cron.schedule('0 10 28-31 * *', mail.CheckSchedule);
+// cron.schedule('0 10 1-5 * *', mail.CheckSchedule);
 
 // Start the server
 app.listen(port, () => {

@@ -42,7 +42,7 @@ function CheckSchedule() {
   // Query for Schedule
   const querySchedule = `
     SELECT Email, admin_email, Schedule_Equipment
-    FROM Schedule
+    FROM schedule
     WHERE ${queryMonthName} = 2
   `;
 
@@ -53,8 +53,9 @@ function CheckSchedule() {
       return;
     }
 
+    console.log(results);
     results.forEach(row => {
-      sendEmailForSubtask(row.Email, row.admin_email, row.Schedule_Equipment, queryMonthName);
+      //sendEmailForSubtask(row.Email, row.admin_email, row.Schedule_Equipment, queryMonthName);
     });
 
     // After processing the first query, execute the second query
@@ -63,7 +64,6 @@ function CheckSchedule() {
         console.error("Error executing SQL query for Schedule:", error);
         return;
       }
-
       results.forEach(row => {
         sendEmailForSubtask(row.Email, row.admin_email, row.Schedule_Equipment, queryMonthName);
       });
@@ -114,4 +114,4 @@ module.exports = {
   CheckSchedule
 };
 
-// setTimeout(CheckSchedule, 10000);
+//setTimeout(CheckSchedule, 1000);
