@@ -55,7 +55,7 @@ function CheckSchedule() {
 
     console.log(results);
     results.forEach(row => {
-      //sendEmailForSubtask(row.Email, row.admin_email, row.Schedule_Equipment, queryMonthName);
+      sendEmailForSubtask(row.Email, row.admin_email, row.Schedule_Equipment, queryMonthName);
     });
 
     // After processing the first query, execute the second query
