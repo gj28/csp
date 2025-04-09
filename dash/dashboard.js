@@ -412,53 +412,30 @@ function AllSubTask(req, res) {
 
 
 function approvalRequestForSubTask(req, res) {
-  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload } = req.body;
+  const { Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload, dept } = req.body;
 
   let updateMonth = '';
   switch (Month.toLowerCase()) {
-    case 'january':
-      updateMonth = 'Jan';
-      break;
-    case 'february':
-      updateMonth = 'Feb';
-      break;
-    case 'march':
-      updateMonth = 'Mar';
-      break;
-    case 'april':
-      updateMonth = 'Apr';
-      break;
-    case 'may':
-      updateMonth = 'May';
-      break;
-    case 'june':
-      updateMonth = 'Jun';
-      break;
-    case 'july':
-      updateMonth = 'Jul';
-      break;
-    case 'august':
-      updateMonth = 'Aug';
-      break;
-    case 'september':
-      updateMonth = 'Sep';
-      break;
-    case 'october':
-      updateMonth = 'Oct';
-      break;
-    case 'november':
-      updateMonth = 'Nov';
-      break;
-    case 'december':
-      updateMonth = 'Dec';
-      break;
-    default:
-      updateMonth = Month; // Default to the original month name
-      break;
+    case 'january': updateMonth = 'Jan'; break;
+    case 'february': updateMonth = 'Feb'; break;
+    case 'march': updateMonth = 'Mar'; break;
+    case 'april': updateMonth = 'Apr'; break;
+    case 'may': updateMonth = 'May'; break;
+    case 'june': updateMonth = 'Jun'; break;
+    case 'july': updateMonth = 'Jul'; break;
+    case 'august': updateMonth = 'Aug'; break;
+    case 'september': updateMonth = 'Sep'; break;
+    case 'october': updateMonth = 'Oct'; break;
+    case 'november': updateMonth = 'Nov'; break;
+    case 'december': updateMonth = 'Dec'; break;
+    default: updateMonth = Month;
   }
 
   try {
-    const approvalCheckQuery = 'SELECT * FROM approval WHERE task = ? AND Month = ?';
+    const approvalCheckQuery = `
+      SELECT * FROM approval 
+      WHERE task = ? AND Month = ? AND Year = YEAR(CURRENT_DATE())
+    `;
 
     db.query(approvalCheckQuery, [Task, Month], (checkError, checkResult) => {
       if (checkError) {
@@ -467,11 +444,14 @@ function approvalRequestForSubTask(req, res) {
       }
 
       if (checkResult && checkResult.length > 0) {
-        console.error('Approval request already exists for this month and task');
-        return res.status(400).json({ message: 'Approval request already exists for this month and task' });
+        console.error('Approval request already exists for this task, month, and year');
+        return res.status(400).json({ message: 'Approval request already exists for this task and month in the current year' });
       }
 
-      const approvalInsertQuery = 'INSERT INTO approval (task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload) VALUES (?,?,?,?,?,?,?,?,?)';
+      const approvalInsertQuery = `
+        INSERT INTO approval (task, Frequency, Month, Year, Responsibility, Email, Mob, admin_email, remark, upload)
+        VALUES (?, ?, ?, YEAR(CURRENT_DATE()), ?, ?, ?, ?, ?, ?)
+      `;
 
       db.query(approvalInsertQuery, [Task, Frequency, Month, Responsibility, Email, Mob, admin_email, remark, upload], (insertError, insertResult) => {
         if (insertError) {
@@ -485,7 +465,8 @@ function approvalRequestForSubTask(req, res) {
             console.error('Error while updating schedule:', updateError);
             return res.status(500).json({ message: 'Internal server error' });
           }
-          sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email)
+
+          sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email);
           return res.json({ message: 'Approval Request Sent Successfully!' });
         });
       });
@@ -495,6 +476,7 @@ function approvalRequestForSubTask(req, res) {
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
 
 function sendScheduleMailForApproval(Task, Frequency, Month, Responsibility, admin_email) {
   const transporter = nodemailer.createTransport({
